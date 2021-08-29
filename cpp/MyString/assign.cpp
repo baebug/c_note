@@ -37,7 +37,11 @@ class MyString {
     MyString(char c);                   /* 문자 하나로 생성 */
     MyString(const char* str);          /* 문자열(const char*)로부터 생성 */
     MyString(const MyString& str);      /* 복사 생성자 T (const T& sth) */
+    explicit MyString(int capacity);             /* 크기를 할당 받음 */
     ~MyString();
+
+    /* (리턴 타입) operator(연산자) (연산자가 받는 인자)*/
+    bool operator==(MyString& str);
 };
 
 /* 어차피 문자열은 변수에 들어가 있으므로 개행문자의 공간을 마련할 필요가 없다. */
@@ -67,6 +71,13 @@ MyString::MyString(const MyString& str){
     for(int i = 0; i < string_length; i++){
         string_content[i] = str.string_content[i];
     }
+}
+
+MyString::MyString(int capacity) {
+    string_content = new char[capacity];
+    string_length = 0;
+    memory_capacity = capacity;
+    std::cout << "Capacity : " << capacity << std::endl;
 }
 
 /* marine 이 죽을 때 이름 없앤 것처럼 생각하자.
@@ -262,7 +273,14 @@ int MyString::compare(const MyString& str) const {
 
 }
 
+bool MyString::operator==(MyString& str){
+    return !compare(str);
+    /* str 과 같으면 compare 에서 0 을 리턴한다. 근데 0은 false 이므로 ! 를 붙여주었다.
+    즉, 같으면 true 가 return 되고 다르면 false 가 return 된다. */
+}
+
 int main(){
+    /*
     MyString *bong = new MyString('b');
     MyString hong("mojjang");
 
@@ -298,7 +316,30 @@ int main(){
     MyString str5("abcde");
 
     std::cout << "str4 and str5 compare : " << str4.compare(str5) << std::endl;
+    */
+
+    MyString str1("a word");
+    MyString str2("sentence");
+    MyString str3("sentence");
+
+    /* if: 조건문 안의 문장이 true 일 때 실행 */
+    if (str1 == str2)
+        std::cout << "str1 와 str2 같다." << std::endl;
+    else
+        std::cout << "st1 와 str2 는 다르다." << std::endl;
+
+    if (str2 == str3)
+        std::cout << "str2 와 str3 는 같다." << std::endl;
+    else
+        std::cout << "st2 와 str3 는 다르다" << std::endl;
 
     return 0;
 }
 
+/* MyString 이라는 클래스를 인자로 받는 함수에다가 "abc"와 같은 string 값을 넣으면,
+어떻게 들어온 값으로 MyString을 만들 수 있는지 고민한다.(암시적 변환, implicit conversion) --> 오버로딩 규칙 적용?
+원하지 않는 암시적 변환을 할 수 없도록 컴파일러에게 명시하는 키워드가 explicit(명시적) 이다. (생성자 함수 앞에 적어줌)
+MyString s = "abc"; MyString ss = 5; 복사 생성자의 형태로도 호출 안 됨 (암시적이라서) */
+
+/* mutable int a;
+mutable로 선언하면 const 안에서도 값을 변경할 수 있다. (종종 쓰임) */
