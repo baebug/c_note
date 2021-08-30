@@ -4,6 +4,8 @@
 /* operator 연산자 앞 을 기준으로 뒤 를 수행한다.
 a + b; = a.operator+(b); */
 
+/* 자기 자신을 리턴하는 이항 연산자는 멤버 함수로, 아닌 애들은 외부 함수로 정의합시다! */
+
 class Complex {
     private:
     double real, img;   // 실수와 허수
@@ -23,17 +25,6 @@ class Complex {
     Complex(const char *str);
     Complex(const Complex& c) { real = c.real, img = c.img; }    // 복사 생성자
 
-    /* 사칙 연산의 경우 값을 리턴해야 한다. 이유는 오른쪽에 */
-    Complex operator+(const Complex& c) const;  /* Complex& 가 아닌 Complex 를 리턴하는 이유 */
-    Complex operator-(const Complex& c) const;  /* Complex& case 에서 b + c + b 를 수행하게 되면 */
-    Complex operator*(const Complex& c) const;  /* (b + c) + b 순서로 실행하면서 b 는 b + c 가 되고 */
-    Complex operator/(const Complex& c) const;  /* 결론적으로 (b + c) + (b + c) 의 모양이 된다. */
-
-    Complex operator+(const char* str) const;
-    Complex operator-(const char* str) const;
-    Complex operator*(const char* str) const;
-    Complex operator/(const char* str) const;
-
     /* a = b = c 에서 b = c 가 b 를 리턴해야 a = b 가 제대로 수행된다.
     이때 Complex 타입이 아니라 굳이 Complex&을 리턴하는 이유는 대입 연산 이후에 불필요한 복사를 방지하기 위해서 */
     Complex& operator=(const Complex& c);
@@ -48,7 +39,43 @@ class Complex {
     Complex& operator/=(const Complex& c);
 
     void println() { std::cout << "(" << real << ", " << img << ")" << std::endl; }
+
+    friend Complex operator+(const Complex& a, const Complex& b);
+    friend Complex operator-(const Complex& a, const Complex& b);
+    friend Complex operator*(const Complex& a, const Complex& b);
+    friend Complex operator/(const Complex& a, const Complex& b);
+
+    friend std::ostream& operator<<(std::ostream& os, const Complex& c);
 };
+
+std::ostream& operator<<(std::ostream& os, const Complex& c) {
+    os << "(" << c.real << ", " << c.img << ")";
+    return os;
+}
+
+/* 연산자 오버로딩 이렇게 해놓고 const char* str 등 필요 인자별 생성자만 제대로 만들어두면 됨 */
+Complex operator+(const Complex& a, const Complex& b) {
+    Complex temp(a.real + b.real, a.img + b.img);
+    return temp;
+}
+
+Complex operator-(const Complex& a, const Complex& b) {
+    Complex temp(a.real - b.real, a.img - b.img);
+    return temp;
+}
+
+Complex operator*(const Complex& a, const Complex& b) {
+    Complex temp(a.real * b.real - a.img * b.img, a.real * b.img + a.img * b.real);
+    return temp;
+}
+
+Complex operator/(const Complex& a, const Complex& b) {
+    Complex temp(
+        (a.real * b.real + a.img * b.img) / (b.real * b.real + b.img * b.img),
+        (a.img * b.real - a.real * b.img) / (b.real * b.real + b.img * b.img));
+    return temp;
+}
+
 
 Complex::Complex(const char *str) {
     int st = 0, end = strlen(str);
@@ -78,55 +105,12 @@ Complex::Complex(const char *str) {
     }
 }
 
-Complex Complex::operator+(const Complex& c) const {
-    Complex temp(real + c.real, img + c.img);
-    /* 인스턴스에 있는 real 과 img 에 인자로 받은 c의 real 과 img 를 더한 값을 가진
-    새로운 Complex temp 를 만들고 반환한다. */
-    return temp;
-}
-
 /* 생성자만 남기고 연산자 오버로딩 한 부분을 지워도 작동한다. 
 우리가 a = a + "-1.1 + i3.923"; 이라는 문장을 사용하였을 때,
 컴파일러는 a = a.operator+("-1.1 + i3.923"); 로 알아듣게 되는데
 operator+(const Complex& c) 밖에 없기때문에 직접적으로 오버로딩 되지는 않지만 
 다음 순위를 찾는 과정에서 Complex(const char *str) 생성자를 찾게 된다. 
 즉, a = a.operator+(Complex("-1.1 + i3.923")); 가 수행된다. */
-Complex Complex::operator+(const char *str) const {
-    Complex temp(str);
-    return (*this) + temp;
-}
-
-Complex Complex::operator-(const Complex& c) const {
-    Complex temp(real - c.real, img - c.img);
-    return temp;
-}
-
-Complex Complex::operator-(const char *str) const {
-    Complex temp(str);
-    return (*this) - temp;
-}
-
-Complex Complex::operator*(const Complex& c) const {
-    Complex temp(real * c.real - img * c.img, real * c.img + img * c.real);
-    return temp;
-}
-
-Complex Complex::operator*(const char *str) const {
-    Complex temp(str);
-    return (*this) * temp;
-}
-
-Complex Complex::operator/(const Complex& c) const {
-    Complex temp(
-        (real * c.real + img * c.img) / (c.real * c.real + c.img * c.img),
-        (img * c.real - real * c.img) / (c.real * c.real + c.img * c.img));
-    return temp;
-}
-
-Complex Complex::operator/(const char *str) const {
-    Complex temp(str);
-    return (*this) / temp;
-}
 
 double Complex::get_number(const char *str, int from, int to) {
     bool minus = false;
@@ -215,17 +199,21 @@ Complex& Complex::operator/=(const Complex& c) {
     return *this;
 }
 
+/* 자기 자신을 리턴하는 이항 연산자는 멤버 함수로, 아닌 애들은 외부 함수로 정의합시다! */
 
 int main(){
     Complex a(0, 0);
-    a = a + "-1.1 + i3.923";
+    a = "-1.1 + i3.923" + a;
+    a = a + a;
+
     a.println();
-    a = a - "1.2 -i1.823";
+
+    a = a + "1.1 +i0.3";
     a.println();
-    a = a * "2.3+i22";
+    a = "1.1 +i0.3" + a;
     a.println();
-    a = a / "-12+i55";
-    a.println();
+    a += "1.1 +i0.3";
+    std::cout << "a 의 값은 : " << a << " 이다." << std::endl;
 
     return 0;
 }
