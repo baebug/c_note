@@ -20,13 +20,13 @@ class Base {
 C++ 의 경우 하위 클래스가 여러 클래스에게 상속받을 수 있기 때문에
 기반 - 파생 클래스 라고 부르는게 낫다고 본다. */
 
-/* 클래스 Derived 가 클래스 Base 를 public 형식으로 상속받겠다. */
 /*
 (상속 타입) : (파생 클래스 입장)
 public : 변화 없음
 protected : public -> protected
 private : 모두 private
 */
+/* 클래스 Derived 가 클래스 Base 를 public 형식으로 상속받겠다. */
 class Derived : public Base {
     std::string child_string;
 
