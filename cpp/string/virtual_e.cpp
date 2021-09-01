@@ -15,4 +15,3 @@ class C : public A, public B {
     public:
     int c;
 };
-
